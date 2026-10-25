@@ -8,7 +8,9 @@ PSO'yu önce **elle** (9 parçacıklı bir parabol örneğiyle), sonra **kodla**
 |---|---|
 | `pso_parabol.py` | Parabol maksimizasyonu. El hesabını adım adım tekrar eder |
 | `pso.py` | Genel PSO (NumPy): `global` ve `ring` topolojisi, test fonksiyonları |
-| `requirements.txt` | Gereken paket (`numpy`) |
+| `gorsel.py` | Grafikleri üretir (parabol üzerinde parçacıklar, yakınsama eğrileri) |
+| `gorseller/` | `gorsel.py`'nin ürettiği PNG grafikler |
+| `requirements.txt` | Gereken paketler (`numpy`, `matplotlib`) |
 
 ## Neden pbest ve velocity?
 
@@ -214,6 +216,40 @@ w = 0.7: gbest x = 2.500000, f(x) = 26.250000
 
 </details>
 
+## Görselleştirme
+
+```bash
+python gorsel.py
+```
+
+Grafikler `gorseller/` klasörüne PNG olarak kaydedilir.
+
+### Parabol üzerinde parçacıklar (el hesabı)
+
+![Parabol üzerinde 0., 1. ve 2. iterasyonda parçacıklar](gorseller/parabol_iterasyonlar.png)
+
+- **0. iterasyon:** Parçacıklar tüm aralığa dağılmış durumda. gbest x6 = 2.3.
+- **1. iterasyon:** Hepsi zirvenin etrafında toplanıyor (x = 0.82 … 3.26). Yakınlaştırma kutusunda parçacık numaraları okunuyor. gbest x7 = 2.37.
+- **2. iterasyon:** `w = 1` olduğu için hız sönmüyor. Parçacıklar zirveyi aşıp yeniden dağılıyor (x = −4.10 … 10). 1. parçacık 12.33'e gidiyor, kodda 10'a çekiliyor. gbest hâlâ 2.37.
+
+### Parabolde yakınsama
+
+![Parabolde w=1 ve w=0.7 için yakınsama](gorseller/yakinsama_parabol.png)
+
+Hata, `26.25 − f(gbest)` olarak log ekseninde gösteriliyor. Sonuçlar tek çalıştırmaya (`seed = 1`) dayanıyor, genel bir kural olarak okunmamalı:
+
+- `w = 1`: Hata 28. iterasyonda yaklaşık 4e-6'ya düşüp orada kalıyor.
+- `w = 0.7`: 90. iterasyonda makine hassasiyetine iniyor (hata ≈ 0).
+
+### Genel PSO'da yakınsama
+
+![pso.py ile Sphere, Rastrigin ve Rosenbrock için yakınsama](gorseller/yakinsama_pso.png)
+
+10 boyut, global topoloji, `seed = 0`:
+
+- **Sphere** düzenli olarak düşüyor ve `patience` nedeniyle 916. iterasyonda duruyor (en iyi değer ≈ 2.7e-23).
+- **Rastrigin** 1.99'da, **Rosenbrock** 3.94'te bitiyor. İkisi de Sphere gibi 0'a inemiyor.
+
 ## Genel PSO (`pso.py`)
 
 Aynı fikrin NumPy ile yazılmış, istenen fonksiyona uygulanabilen genel hâli:
@@ -256,4 +292,5 @@ best_x, best_f, history = PSO(my_func, [(-10, 10)] * 5).optimize()
 pip install -r requirements.txt
 python pso_parabol.py   # el hesabının kodu
 python pso.py           # genel PSO + topoloji karşılaştırması
+python gorsel.py        # grafikleri gorseller/ klasörüne kaydeder
 ```
