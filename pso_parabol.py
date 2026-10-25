@@ -27,6 +27,10 @@ import numpy as np
 
 ALT, UST = -10.0, 10.0  # arama aralığı
 
+# El hesabındaki başlangıç konumları ve (r1, r2) çiftleri
+X0 = [-9.6, -6, -2.6, -1.1, 0.6, 2.3, 2.8, 8.3, 10]
+RASSAL = [(0.213, 0.876), (0.113, 0.706)]
+
 
 def f(x):
     """Maksimize edilecek parabol: f(x) = -x^2 + 5x + 20."""
@@ -74,6 +78,9 @@ def pso_maksimize(
     rassal  : [(r1, r2), ...] verilen iterasyonlar için rassal sayı çiftleri;
               daha fazla iterasyon istenirse kalanı rastgele üretilir
     basamak : None -> tam hassasiyet, 2 -> elle hesaptaki gibi 2 haneye kes
+
+    Döndürür: gbest_x, gbest_f, gecmis (her iterasyondaki gbest fitness),
+              kayit (her iterasyondaki parçacık konumları, grafik için)
     """
     rng = np.random.default_rng(seed)
 
@@ -85,6 +92,16 @@ def pso_maksimize(
     g = int(np.argmax(pbest_f))  # amaç maksimize etmek -> en büyük fitness
     gbest_x, gbest_f = pbest_x[g], pbest_f[g]
     gecmis = [gbest_f]
+    # Grafik için her iterasyondaki konumları sakla (0. iterasyon dahil)
+    kayit = [
+        {
+            "x": x.copy(),
+            "fit": fit.copy(),
+            "gbest_x": float(gbest_x),
+            "x_ham": x.copy(),
+            "disari": np.zeros(len(x), dtype=bool),
+        }
+    ]
 
     if verbose:
         tablo_yazdir("0. iterasyon (başlangıç: v = 0, pbest = x)", x, v, fit, pbest_x)
@@ -120,6 +137,15 @@ def pso_maksimize(
         g = int(np.argmax(pbest_f))
         gbest_x, gbest_f = pbest_x[g], pbest_f[g]
         gecmis.append(gbest_f)
+        kayit.append(
+            {
+                "x": x.copy(),
+                "fit": fit.copy(),
+                "gbest_x": float(gbest_x),
+                "x_ham": x_ham.copy(),
+                "disari": disari.copy(),
+            }
+        )
 
         if verbose:
             tablo_yazdir(
@@ -128,13 +154,10 @@ def pso_maksimize(
             )
             print(f"gbest = x{g + 1} = {gbest_x:.4f}  (fitness {gbest_f:.4f})\n")
 
-    return gbest_x, gbest_f, gecmis
+    return gbest_x, gbest_f, gecmis, kayit
 
 
 if __name__ == "__main__":
-    X0 = [-9.6, -6, -2.6, -1.1, 0.6, 2.3, 2.8, 8.3, 10]
-    RASSAL = [(0.213, 0.876), (0.113, 0.706)]  # el hesabındaki (r1, r2) çiftleri
-
     print("=" * 66)
     print("A) EL HESABININ TEKRARI  (w = c1 = c2 = 1, sayılar 2 haneye kesilir)")
     print("=" * 66)
@@ -145,5 +168,5 @@ if __name__ == "__main__":
     print("=" * 66)
     print("Gerçek maksimum: x = 2.5, f(x) = 26.25")
     for w in (1.0, 0.7):
-        bx, bf, gecmis = pso_maksimize(X0, RASSAL, w=w, n_iter=100, seed=1, verbose=False)
+        bx, bf, gecmis, _ = pso_maksimize(X0, RASSAL, w=w, n_iter=100, seed=1, verbose=False)
         print(f"w = {w}: gbest x = {bx:.6f}, f(x) = {bf:.6f}")
